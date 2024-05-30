@@ -1,5 +1,5 @@
 class ToDo {
-  int? id;
+  String? id;
   String?todoText;
   bool isDone;
 
@@ -11,9 +11,9 @@ class ToDo {
 
   static List<ToDo> todoList(){
     return [
-      ToDo(id: 1, todoText: "Something to do"),
-      ToDo(id: 2, todoText: "Build the damn app"),
-      ToDo(id: 3, todoText: "Read books", isDone: true),
+      ToDo(id: '1', todoText: "Something to do"),
+      ToDo(id: '2', todoText: "Build the damn app"),
+      ToDo(id: '3', todoText: "Read books", isDone: true),
     ];
   }
 

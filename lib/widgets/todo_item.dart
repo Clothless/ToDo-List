@@ -4,7 +4,9 @@ import 'package:todo_list/models/todo.dart';
 
 class ToDoItem extends StatelessWidget {
   final ToDo todo;
-  const ToDoItem({super.key, required this.todo});
+  final onToDoChanged;
+  final onDeleteItem;
+  const ToDoItem({super.key, required this.todo, required this.onDeleteItem, required this.onToDoChanged});
 
   @override
   Widget build(BuildContext context) {
@@ -16,7 +18,7 @@ class ToDoItem extends StatelessWidget {
       ),
       child: ListTile(
         onTap: () {
-          print("It's working");
+          onToDoChanged(todo);
         },
         leading: Icon(todo.isDone? Icons.check_box : Icons.check_box_outline_blank, color: blue,),
         title: Text(
@@ -24,6 +26,7 @@ class ToDoItem extends StatelessWidget {
           style: TextStyle(
               fontSize: 16,
               color: black,
+              decorationThickness: 2.0,
               decoration: todo.isDone? TextDecoration.lineThrough : null,
               ),
         ),
@@ -37,7 +40,7 @@ class ToDoItem extends StatelessWidget {
               BoxDecoration(color: red, borderRadius: BorderRadius.circular(7)),
           child: IconButton(
             onPressed: () {
-              print("it's also working");
+              onDeleteItem(todo.id);
             },
             icon: const Icon(Icons.delete),
             iconSize: 18,

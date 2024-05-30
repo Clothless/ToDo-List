@@ -11,8 +11,17 @@ class HomeScreen extends StatefulWidget {
 }
 
 final todoList = ToDo.todoList();
+List<ToDo> _foundToDo = [];
+final _todoController = TextEditingController();
 
 class _HomeScreenState extends State<HomeScreen> {
+  @override
+  void initState() {
+    // TODO: implement initState
+    _foundToDo = todoList;
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -37,7 +46,7 @@ class _HomeScreenState extends State<HomeScreen> {
             decoration: BoxDecoration(color: bgColor),
             child: Column(
               children: [
-                const SearchBox(),
+                SearchBox(),
                 Expanded(
                   child: ListView(
                     children: [
@@ -51,9 +60,11 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ),
                       ),
-                      for (ToDo item in todoList)
+                      for (ToDo item in _foundToDo)
                         ToDoItem(
                           todo: item,
+                          onToDoChanged: _handleChange,
+                          onDeleteItem: _deleteItem,
                         )
                     ],
                   ),
@@ -67,39 +78,47 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 Expanded(
                   child: Container(
-                    margin: const EdgeInsets.only(bottom: 20, right: 10, left: 20),
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+                    margin:
+                        const EdgeInsets.only(bottom: 20, right: 10, left: 20),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
                     decoration: BoxDecoration(
-                        color: white,
-                        boxShadow: [
-                          BoxShadow(
-                            color: grey,
-                            offset: const Offset(0.0, 0.0),
-                            blurRadius: 10.0,
-                            spreadRadius: 0.0,
-                            ),
-                          ],
-                          borderRadius: BorderRadius.circular(10),
+                      color: white,
+                      boxShadow: [
+                        BoxShadow(
+                          color: grey,
+                          offset: const Offset(0.0, 0.0),
+                          blurRadius: 10.0,
+                          spreadRadius: 0.0,
+                        ),
+                      ],
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const TextField(
-                      decoration: InputDecoration(
-                        hintText: "Add new task...",
-                        border: InputBorder.none
-                      ),
+                    child: TextField(
+                      controller: _todoController,
+                      decoration: const InputDecoration(
+                          hintText: "Add new task...",
+                          border: InputBorder.none),
                     ),
                   ),
                 ),
                 Container(
                   margin: const EdgeInsets.only(bottom: 20, right: 10),
                   child: ElevatedButton(
-                    onPressed: (){},
+                    onPressed: () {
+                      _addToDoItem(_todoController.text);
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: blue,
-                      shape: ContinuousRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                      shape: ContinuousRectangleBorder(
+                          borderRadius: BorderRadius.circular(20)),
                       minimumSize: const Size(40, 40),
                       elevation: 10,
                     ),
-                    child: const Text("+", style: TextStyle(fontSize: 40),),
+                    child: const Text(
+                      "+",
+                      style: TextStyle(fontSize: 40),
+                    ),
                   ),
                 )
               ],
@@ -109,27 +128,59 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-}
 
-class SearchBox extends StatelessWidget {
-  const SearchBox({
-    super.key,
-  });
+  void _handleChange(ToDo todo) {
+    setState(() {
+      todo.isDone = !todo.isDone;
+    });
+  }
 
-  @override
-  Widget build(BuildContext context) {
+  void _deleteItem(String id) {
+    setState(() {
+      todoList.removeWhere((element) => element.id == id);
+    });
+  }
+
+  void _addToDoItem(String todo) {
+    setState(() {
+      todoList.add(ToDo(
+          id: DateTime.now().microsecondsSinceEpoch.toString(),
+          todoText: todo));
+    });
+    _todoController.clear();
+  }
+
+  void _runFilter(String enteredText) {
+    List<ToDo> results = [];
+    if (enteredText.isEmpty) {
+      results = todoList;
+    } else {
+      results = todoList
+          .where((element) => element.todoText!
+              .toLowerCase()
+              .contains((enteredText.trim()).toLowerCase()))
+          .toList();
+    }
+    setState(() {
+    _foundToDo = results;
+    });
+  }
+
+  Widget SearchBox() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 15),
       decoration:
           BoxDecoration(color: white, borderRadius: BorderRadius.circular(20)),
       child: TextField(
+        onChanged: (value) => _runFilter(value),
         decoration: InputDecoration(
             contentPadding: const EdgeInsets.all(0),
             prefixIcon: Icon(
               Icons.search,
               color: grey,
             ),
-            prefixIconConstraints: const BoxConstraints(maxHeight: 20, minWidth: 25),
+            prefixIconConstraints:
+                const BoxConstraints(maxHeight: 20, minWidth: 25),
             border: InputBorder.none,
             hintText: "Search",
             hintStyle: TextStyle(color: grey)),
