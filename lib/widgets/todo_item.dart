@@ -10,6 +10,7 @@ class ToDoItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    print(todo.toMap());
     return Container(
       margin: const EdgeInsets.only(bottom: 20),
       decoration: BoxDecoration(
@@ -20,14 +21,14 @@ class ToDoItem extends StatelessWidget {
         onTap: () {
           onToDoChanged(todo);
         },
-        leading: Icon(todo.isDone? Icons.check_box : Icons.check_box_outline_blank, color: blue,),
+        leading: Icon((todo.isDone == 1)? Icons.check_box : Icons.check_box_outline_blank, color: blue,),
         title: Text(
           todo.todoText!,
           style: TextStyle(
               fontSize: 16,
               color: black,
               decorationThickness: 2.0,
-              decoration: todo.isDone? TextDecoration.lineThrough : null,
+              decoration: (todo.isDone == 1)? TextDecoration.lineThrough : null,
               ),
         ),
         contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),

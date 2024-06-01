@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:todo_list/constants/colors.dart';
 import 'package:todo_list/models/todo.dart';
+import 'package:todo_list/utilities/db.dart';
+import 'package:todo_list/utilities/db_helper.dart';
 import 'package:todo_list/widgets/todo_item.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -10,7 +12,7 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-final todoList = ToDo.todoList();
+final todoList = <ToDo>[];
 List<ToDo> _foundToDo = [];
 final _todoController = TextEditingController();
 
@@ -33,7 +35,7 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             Icon(
               Icons.menu_rounded,
-              color: Colors.grey,
+              color: Colors.transparent,
             ),
             Icon(Icons.person)
           ],
@@ -48,7 +50,7 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 SearchBox(),
                 Expanded(
-                  child: ListView(
+                  child: Column(
                     children: [
                       Container(
                         margin: const EdgeInsets.only(top: 50, bottom: 50),
@@ -60,12 +62,35 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ),
                       ),
-                      for (ToDo item in _foundToDo)
-                        ToDoItem(
-                          todo: item,
-                          onToDoChanged: _handleChange,
-                          onDeleteItem: _deleteItem,
-                        )
+                      FutureBuilder(
+                        future: DatabaseHelper().fetchAll(),
+                        builder: ((context, snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const Center(
+                                child: CircularProgressIndicator());
+                          } else if (snapshot.data == null) {
+                            return Center(
+                              child: Text("Nothing here"),
+                            );
+                          } else {
+                            _foundToDo = snapshot.data!;
+                            print(snapshot.data);
+                            return Expanded(
+                              child: ListView(
+                                children: [
+                                  for (ToDo item in _foundToDo)
+                                    ToDoItem(
+                                      todo: item,
+                                      onToDoChanged: _handleChange,
+                                      onDeleteItem: _deleteItem,
+                                    )
+                                ],
+                              ),
+                            );
+                          }
+                        }),
+                      ),
                     ],
                   ),
                 ),
@@ -130,22 +155,32 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _handleChange(ToDo todo) {
-    setState(() {
-      todo.isDone = !todo.isDone;
-    });
+    if (todo.isDone == 1) {
+      print("making it false");
+      todo.isDone = 0;
+      setState(() {
+        DatabaseHelper().update(todo);
+      });
+    } else {
+      todo.isDone = 1;
+      print("making it true");
+      setState(() {
+        DatabaseHelper().update(todo);
+      });
+    }
   }
 
   void _deleteItem(String id) {
     setState(() {
-      todoList.removeWhere((element) => element.id == id);
+      DatabaseHelper().delete(id);
     });
   }
 
-  void _addToDoItem(String todo) {
+  void _addToDoItem(String todo) async {
     setState(() {
-      todoList.add(ToDo(
-          id: DateTime.now().microsecondsSinceEpoch.toString(),
-          todoText: todo));
+      ToDo temp = ToDo(
+          id: DateTime.now().microsecondsSinceEpoch.toString(), todoText: todo);
+      DatabaseHelper().insert(temp);
     });
     _todoController.clear();
   }
@@ -162,7 +197,7 @@ class _HomeScreenState extends State<HomeScreen> {
           .toList();
     }
     setState(() {
-    _foundToDo = results;
+      _foundToDo = results;
     });
   }
 
